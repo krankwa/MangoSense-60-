@@ -1,10 +1,17 @@
 apply plugin: 'com.android.application'
 
 android {
+<<<<<<< HEAD
     namespace "com.mangosense.app"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "com.mangosense.app"
+=======
+    namespace "io.ionic.starter"
+    compileSdk rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "io.ionic.starter"
+>>>>>>> bf5773cc890b75770f61aaad4dc2137917433f98
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
