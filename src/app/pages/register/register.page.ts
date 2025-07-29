@@ -83,7 +83,7 @@ export class RegisterPage implements OnInit {
       });
 
       const formValue = this.registerForm.value;
-      const apiUrl = `${environment.apiUrl}/register/`;
+      const apiUrl = `${environment.apiUrl}`;
       const registerData = {
         first_name: formValue.firstName,
         last_name: formValue.lastName,

@@ -71,7 +71,7 @@ export class VerifyPage implements OnInit {
     const formData = new FormData();
     formData.append('image', blob, 'image.jpg');
 
-    const apiUrl = 'http://127.0.0.1:8000/api/predict/';
+    const apiUrl = environment.apiUrl.replace(/\/$/, '');
 
     // Remove Content-Type header to let browser set it automatically for multipart/form-data
     this.http.post(apiUrl, formData).subscribe({

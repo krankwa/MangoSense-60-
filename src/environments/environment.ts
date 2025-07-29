@@ -2,7 +2,7 @@ import { Environment } from './environment.interface';
 
 export const environment: Environment = {
   production: false,
-  apiUrl: 'http://127.0.0.1:8000/api'  // Changed to localhost for debugging
+  apiUrl: 'https://mango-deployment-production.up.railway.app'  // Updated to Railway deployment
   // apiUrl: 'http://192.168.1.18:8000/api'  // Use this when server is on network
 };
 
