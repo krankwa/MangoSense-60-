@@ -1,0 +1,88 @@
+<ion-content>
+  <div id="header">
+    <div id="app-bar">
+      <ion-icon name="arrow-back" routerlink="/loader"></ion-icon>
+      <div id="logo">
+        <img src="assets/logo2.png" alt="Logo">
+      </div>
+      <div></div>
+    </div>
+  </div>
+
+  <div class="wrapper">
+    <ion-card class="form-wrapper">
+      <h1>Login</h1>
+      <ion-card-content>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <ion-item>
+            <ion-icon name="mail"></ion-icon>
+            <ion-input 
+              type="email" 
+              label="Email" 
+              labelPlacement="floating" 
+              placeholder="Enter email" 
+              formControlName="email"
+              required>
+            </ion-input>
+          </ion-item>
+          
+          <ion-item>
+            <ion-icon name="lock-closed"></ion-icon>
+            <ion-input 
+              type="password" 
+              label="Password" 
+              labelPlacement="floating" 
+              placeholder="Enter password" 
+              formControlName="password"
+              required>
+            </ion-input>
+          </ion-item>
+
+          <ion-button 
+            type="submit" 
+            expand="block" 
+            class="login-button"
+            [disabled]="isSubmitting"
+            (click)="onSubmit()">
+            
+            @if (isSubmitting) {
+              <ion-spinner name="crescent"></ion-spinner>
+            }
+            @if (!isSubmitting) {
+              <span>Sign in</span>
+            }
+          </ion-button>
+        </form>
+
+        <div class="register-link">
+          Don't have an account?
+          <a (click)="goToRegister()">Register</a>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <div class="line-text">
+      <span class="lines"></span>
+      <span class="text">Or sign up with</span>
+    </div>
+
+    <ion-card class="social-wrapper">
+      <ion-card-content>
+        <div class="socials">
+          <ion-button class="btn-fb">
+            <ion-icon name="logo-facebook"></ion-icon>
+          </ion-button>
+          <ion-button class="btn-tw">
+            <ion-icon name="logo-twitter"></ion-icon>
+          </ion-button>
+          <ion-button class="btn-go">
+            <ion-icon name="logo-google"></ion-icon>
+          </ion-button>
+          <ion-button class="btn-ph">
+            <ion-icon name="call-outline"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
