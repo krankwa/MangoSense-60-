@@ -6,7 +6,7 @@ import { ToastController } from '@ionic/angular';
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
-  standalone: false, // Set to false if you are using this component in a module
+  standalone: false,
 })
 export class AppComponent implements OnInit {
   userName: string = '';
@@ -80,5 +80,10 @@ export class AppComponent implements OnInit {
     } catch (error) {
       console.error('Logout error:', error);
     }
+  }
+
+  get isLoggedIn(): boolean {
+    // Replace 'token' with your actual authentication key if different
+    return !!localStorage.getItem('accessToken');
   }
 }

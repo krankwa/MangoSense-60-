@@ -1,6 +1,6 @@
 <ion-app>
   <ion-split-pane contentId="main-content">
-    <ion-menu contentId="main-content" type="overlay" class="mangosense-menu">
+    <ion-menu *ngIf="isLoggedIn" contentId="main-content" type="overlay" class="mangosense-menu">
       <ion-header>
         <ion-toolbar class="menu-header">
           <div class="menu-logo-section">
