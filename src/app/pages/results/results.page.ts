@@ -23,7 +23,7 @@ export class ResultsPage implements OnInit {
   treatment: string = '';
   confidenceLevel: string = '';
   isLoading = false;
-  isVerified = false;
+  isVerified = true; // Always show results immediately
   verificationResult: boolean | null = null;
 
   indicationsMap: { [key: string]: string[] } = {
@@ -88,84 +88,19 @@ export class ResultsPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Get the image from navigation state
-    const navigation = this.router.getCurrentNavigation();
-    if (navigation?.extras?.state) {
-      this.image = navigation.extras.state['image'];
-    } else {
-      // Fallback to window.history.state
-      this.image = window.history.state?.image;
-    }
-
-    console.log('Received image:', this.image);
-
-    if (this.image) {
-      this.callPredictAPI();
-    } else {
-      this.showToast('No image found. Please go back and take a photo.');
-    }
-  }
-
-  async callPredictAPI() {
-    if (!this.image) {
-      this.showToast('No image to process.');
+    // Always get the result and image from navigation state or window.history.state
+    const navState = window.history.state;
+    this.result = navState?.result || null;
+    this.image = navState?.image || null;
+    if (!this.result || !this.result.success || !this.image) {
+      this.showToast('No result or image found. Please analyze a photo first.');
+      this.isVerified = false;
       return;
     }
-
-    this.isLoading = true;
-    this.mainDisease = 'Analyzing...';
-    
-    const loading = await this.loadingCtrl.create({ 
-      message: 'Analyzing your mango image...',
-      spinner: 'crescent'
-    });
-    await loading.present();
-
-    try {
-      // Convert base64 to blob
-      const base64Data = this.image.split(',')[1];
-      const byteCharacters = atob(base64Data);
-      const byteNumbers = new Array(byteCharacters.length);
-      
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: 'image/jpeg' });
-      
-      const formData = new FormData();
-      formData.append('image', blob, 'image.jpg');
-
-      const apiUrl = `${environment.apiUrl}/predict/`;
-      //const apiUrl = `${(environment as any).apiUrl}/predict/`;
-
-      this.http.post(apiUrl, formData)
-        .pipe(
-          finalize(async () => {
-            this.isLoading = false;
-            await loading.dismiss();
-          })
-        )
-        .subscribe({
-          next: (result: any) => {
-            console.log('API Response:', result);
-            this.result = result;
-            this.processResults();
-          },
-          error: (error: HttpErrorResponse) => {
-            console.error('API error:', error);
-            this.handleError(error);
-          }
-        });
-
-    } catch (error) {
-      await loading.dismiss();
-      this.isLoading = false;
-      console.error('Processing error:', error);
-      this.showToast('Error processing image. Please try again.');
-    }
+    this.processResults();
   }
+
+  // Removed callPredictAPI, not needed when using navigation state result
 
   processResults() {
     console.log('Processing results:', this.result);
