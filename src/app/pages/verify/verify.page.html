@@ -23,8 +23,8 @@
       
       <div class="image-container">
         <div class="image-placeholder">
-          <img *ngIf="image" [src]="image" alt="Preview" class="preview-image" />
-          <div *ngIf="!image" class="placeholder-content">
+          <img *ngIf="imageData" [src]="imageData" alt="Preview" class="preview-image" />
+          <div *ngIf="!imageData" class="placeholder-content">
             <ion-icon name="image-outline"></ion-icon>
             <p>No image selected</p>
           </div>

@@ -1,8 +1,11 @@
 import { Component, OnInit } from '@angular/core';
+// ...existing code...
+import { environment } from '../../../environments/environment';
 import { IonicModule, ToastController, ModalController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-home',
@@ -16,6 +19,7 @@ export class HomePage implements OnInit {
   currentTime: string = '';
   userAvatar: string = '';
   selectedDetectionType: string | null = null; // 'leaf' or 'fruit'
+  selectedImageFile: any = null;
   
   // Statistics
   totalAnalyses: number = 0;
@@ -29,7 +33,8 @@ export class HomePage implements OnInit {
   constructor(
     private router: Router, 
     private toastCtrl: ToastController,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
+    private http: HttpClient
   ) {}
 
   ngOnInit() {
@@ -152,7 +157,6 @@ export class HomePage implements OnInit {
 
   async importPhoto() {
     if (!this.selectedDetectionType) return;
-    
     try {
       const image = await Camera.getPhoto({
         quality: 90,
@@ -161,11 +165,11 @@ export class HomePage implements OnInit {
         source: CameraSource.Photos
       });
       const imageData = 'data:image/jpeg;base64,' + image.base64String;
-      this.router.navigate(['/pages/verify'], { 
-        state: { 
+      this.router.navigate(['/pages/verify'], {
+        state: {
           image: imageData,
-          detectionType: this.selectedDetectionType 
-        } 
+          detectionType: this.selectedDetectionType
+        }
       });
     } catch (err) {
       await this.showToast('Photo import cancelled or failed.', 'warning');
@@ -174,7 +178,6 @@ export class HomePage implements OnInit {
 
   async useCamera() {
     if (!this.selectedDetectionType) return;
-    
     try {
       const image = await Camera.getPhoto({
         quality: 90,
@@ -183,15 +186,27 @@ export class HomePage implements OnInit {
         source: CameraSource.Camera
       });
       const imageData = 'data:image/jpeg;base64,' + image.base64String;
-      this.router.navigate(['/pages/verify'], { 
-        state: { 
+      this.router.navigate(['/pages/verify'], {
+        state: {
           image: imageData,
-          detectionType: this.selectedDetectionType 
-        } 
+          detectionType: this.selectedDetectionType
+        }
       });
     } catch (err) {
       await this.showToast('Camera cancelled or failed.', 'warning');
     }
+  }
+  private base64ToFile(base64: string, filename: string): File {
+    const arr = base64.split(',');
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    const mime = mimeMatch && mimeMatch[1] ? mimeMatch[1] : 'image/jpeg';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
   }
 
   navigateToHistory() {
@@ -224,5 +239,25 @@ export class HomePage implements OnInit {
       ]
     });
     await toast.present();
+  }
+
+  private sendPredictionRequest() {
+    if (!this.selectedImageFile || !this.selectedDetectionType) {
+      this.showToast('Please select an image and detection type.', 'warning');
+      return;
+    }
+    const formData = new FormData();
+    formData.append('image', this.selectedImageFile);
+    formData.append('detection_type', this.selectedDetectionType); // 'leaf' or 'fruit'
+
+    this.http.post(`${environment.apiUrl}/predict/`, formData).subscribe({
+      next: (response) => {
+        this.showToast('Prediction successful!', 'success');
+        // Handle response as needed
+      },
+      error: (err) => {
+        this.showToast('Prediction failed.', 'danger');
+      }
+    });
   }
 }

@@ -13,7 +13,8 @@ import { environment } from '../../../environments/environment';
   styleUrls: ['./verify.page.scss'],
 })
 export class VerifyPage implements OnInit {
-  image: string | null = null;
+  imageData: string | null = null;
+  detectionType: string | null = null;
   isProcessing = false;
 
   constructor(
@@ -25,9 +26,9 @@ export class VerifyPage implements OnInit {
 
   ngOnInit() {
     const nav = window.history.state;
-    this.image = nav.image || null;
-    
-    if (!this.image) {
+    this.imageData = nav.image || null;
+    this.detectionType = nav.detectionType || null;
+    if (!this.imageData) {
       this.showToast('No image provided. Please take or select a photo.', 'warning');
       this.goBack();
     }
@@ -38,77 +39,69 @@ export class VerifyPage implements OnInit {
   }
 
   async confirm() {
-  if (!this.image) {
-    this.showToast('No image to process.', 'warning');
-    return;
-  }
-
-  if (this.isProcessing) {
-    return;
-  }
-
-  this.isProcessing = true;
-  const loading = await this.loadingCtrl.create({ 
-    message: 'Analyzing mango disease...',
-    spinner: 'crescent'
-  });
-  await loading.present();
-
-  try {
-    // Convert base64 to blob
-    const base64 = this.image.replace(/^data:image\/[a-z]+;base64,/, '');
-    const byteCharacters = atob(base64);
-    const byteNumbers = new Array(byteCharacters.length);
-    
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    if (!this.imageData) {
+      this.showToast('No image to process.', 'warning');
+      return;
     }
-    
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'image/jpeg' });
-
-    // Create FormData
-    const formData = new FormData();
-    formData.append('image', blob, 'image.jpg');
-
-    const apiUrl = `${environment.apiUrl}/predict/`;
-
-    // Remove Content-Type header to let browser set it automatically for multipart/form-data
-    this.http.post(apiUrl, formData).subscribe({
-      next: async (result) => {
-        await loading.dismiss();
-        this.isProcessing = false;
-        this.router.navigate(['/pages/results'], { 
-          state: { 
-            result,
-            image: this.image 
-          } 
-        });
-      },
-      error: async (err) => {
-        await loading.dismiss();
-        this.isProcessing = false;
-        console.error('Detection error:', err);
-        
-        let errorMessage = 'Analysis failed. Please try again.';
-        if (err.status === 0) {
-          errorMessage = 'Cannot connect to server. Please check your connection.';
-        } else if (err.status === 415) {
-          errorMessage = 'Image format not supported. Please try a different image.';
-        } else if (err.status >= 500) {
-          errorMessage = 'Server error. Please try again later.';
-        }
-        
-        this.showToast(errorMessage, 'danger');
-      }
+    if (this.isProcessing) {
+      return;
+    }
+    this.isProcessing = true;
+    const loading = await this.loadingCtrl.create({ 
+      message: 'Analyzing mango disease...',
+      spinner: 'crescent'
     });
-  } catch (error) {
-    await loading.dismiss();
-    this.isProcessing = false;
-    console.error('Image processing error:', error);
-    this.showToast('Failed to process image. Please try again.', 'danger');
+    await loading.present();
+    try {
+      // Convert base64 to blob
+      const base64 = this.imageData.replace(/^data:image\/[a-z]+;base64,/, '');
+      const byteCharacters = atob(base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/jpeg' });
+      // Create FormData
+      const formData = new FormData();
+      formData.append('image', blob, 'image.jpg');
+      if (this.detectionType) {
+        formData.append('detection_type', this.detectionType);
+      }
+      const apiUrl = `${environment.apiUrl}/predict/`;
+      this.http.post(apiUrl, formData).subscribe({
+        next: async (result) => {
+          await loading.dismiss();
+          this.isProcessing = false;
+          this.router.navigate(['/pages/results'], { 
+            state: { 
+              result,
+              image: this.imageData 
+            } 
+          });
+        },
+        error: async (err) => {
+          await loading.dismiss();
+          this.isProcessing = false;
+          console.error('Detection error:', err);
+          let errorMessage = 'Analysis failed. Please try again.';
+          if (err.status === 0) {
+            errorMessage = 'Cannot connect to server. Please check your connection.';
+          } else if (err.status === 415) {
+            errorMessage = 'Image format not supported. Please try a different image.';
+          } else if (err.status >= 500) {
+            errorMessage = 'Server error. Please try again later.';
+          }
+          this.showToast(errorMessage, 'danger');
+        }
+      });
+    } catch (error) {
+      await loading.dismiss();
+      this.isProcessing = false;
+      console.error('Image processing error:', error);
+      this.showToast('Failed to process image. Please try again.', 'danger');
+    }
   }
-}
 
   private async showToast(message: string, color: 'success' | 'warning' | 'danger' = 'danger') {
     const toast = await this.toastCtrl.create({ 
