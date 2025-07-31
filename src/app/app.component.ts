@@ -12,7 +12,7 @@ export class AppComponent implements OnInit {
   userName: string = '';
   userAvatar: string = '';
   currentTimeGreeting: string = '';
-  
+
   public appPages = [
     { title: 'Home', url: 'pages/home', icon: 'home', badge: null },
     { title: 'Analysis History', url: '/folder/History', icon: 'time', badge: null },
@@ -33,14 +33,29 @@ export class AppComponent implements OnInit {
   }
 
   private loadUserData() {
-    const userData = localStorage.getItem('user_data');
+    // Check for both old and new localStorage keys, just like home.page.ts
+    const userData = localStorage.getItem('userInfo') || localStorage.getItem('user_data');
     if (userData) {
       try {
         const user = JSON.parse(userData);
-        this.userName = user.firstName || user.name || 'User';
-        this.userAvatar = user.avatar || '';
+        this.userName = user.firstName ||
+                        user.first_name ||
+                        user.name ||
+                        user.username ||
+                        user.displayName ||
+                        'User';
+        this.userAvatar = user.avatar || user.profileImage || '';
       } catch (error) {
         console.error('Error parsing user data:', error);
+        this.userName = 'User';
+      }
+    } else {
+      // Fallback to userName stored directly
+      const storedUserName = localStorage.getItem('userName');
+      if (storedUserName) {
+        this.userName = storedUserName;
+      } else {
+        this.userName = 'User';
       }
     }
   }

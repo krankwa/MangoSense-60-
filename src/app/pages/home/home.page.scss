@@ -388,7 +388,10 @@ $accent-orange: #e67e22;
     .selection-cards {
       margin-bottom: 24px;
       text-align: center;
-      
+      display: flex;
+      flex-direction: column;
+      align-items: center; // Center the content horizontally
+
       .selection-title {
         color: var(--ion-color-dark);
         margin-bottom: 16px;
@@ -399,9 +402,15 @@ $accent-orange: #e67e22;
         display: flex;
         gap: 16px;
         justify-content: center;
-        
+        align-items: stretch;
+        width: 100%;
+        max-width: 650px; // Optional: limit max width for better look
+        margin: 0 auto;
+
         @media (max-width: 576px) {
           flex-direction: column;
+          align-items: center;
+          width: 100%;
         }
       }
     }
