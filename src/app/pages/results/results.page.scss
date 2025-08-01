@@ -550,3 +550,27 @@ $danger: #dc3545;
   border-radius: 18px;
   backdrop-filter: blur(2px); // Optional: adds a subtle blur to the background
 }
+
+.verification-pending {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  text-align: center;
+  
+  .pending-content {
+    ion-spinner {
+      margin-bottom: 20px;
+    }
+    
+    h3 {
+      color: var(--ion-color-primary);
+      margin-bottom: 10px;
+    }
+    
+    p {
+      color: var(--ion-color-medium);
+    }
+  }
+}

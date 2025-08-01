@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { AuthGuard } from './guards/auth.guard';
 
 const routes: Routes = [
   {
@@ -9,7 +10,8 @@ const routes: Routes = [
   },
   {
     path: 'folder/:id',
-    loadChildren: () => import('./folder/folder.module').then( m => m.FolderPageModule)
+    loadChildren: () => import('./folder/folder.module').then( m => m.FolderPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'pages/loader',
@@ -17,28 +19,35 @@ const routes: Routes = [
   },
   {
     path: 'pages/home',
-    loadChildren: () => import('./pages/home/home.module').then( m => m.HomePageModule)
+    loadChildren: () => import('./pages/home/home.module').then( m => m.HomePageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'pages/detect',
-    loadChildren: () => import('./pages/detect/detect.module').then( m => m.DetectPageModule)
+    loadChildren: () => import('./pages/detect/detect.module').then( m => m.DetectPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'pages/results',
-    loadChildren: () => import('./pages/results/results.module').then( m => m.ResultsPageModule)
+    loadChildren: () => import('./pages/results/results.module').then( m => m.ResultsPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'pages/verify',
-    loadChildren: () => import('./pages/verify/verify.module').then( m => m.VerifyPageModule)
+    loadChildren: () => import('./pages/verify/verify.module').then( m => m.VerifyPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'pages/heatmap',
-    loadChildren: () => import('./pages/heatmap/heatmap.module').then( m => m.HeatmapPageModule)
+    loadChildren: () => import('./pages/heatmap/heatmap.module').then( m => m.HeatmapPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'pages/history',
-    loadChildren: () => import('./pages/history/history.module').then( m => m.HistoryPageModule)
+    loadChildren: () => import('./pages/history/history.module').then( m => m.HistoryPageModule),
+    canActivate: [AuthGuard]
   },
+  // Public routes (no guard)
   {
     path: 'pages/login',
     loadChildren: () => import('./pages/login/login.module').then( m => m.LoginPageModule)

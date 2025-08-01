@@ -78,6 +78,9 @@ export class LoginPage implements OnInit {
               localStorage.setItem('userName', response.user.firstName + ' ' + response.user.lastName);
             }
             
+            // Set the isLoggedIn flag that AuthGuard checks for
+            localStorage.setItem('isLoggedIn', 'true');
+            
             this.showToast('Login successful!', 'success');
             this.router.navigate(['/pages/home']);
           } else {
@@ -154,6 +157,16 @@ export class LoginPage implements OnInit {
       await loading.dismiss();
       this.showToast('Connection test failed.');
     }
+  }
+
+  // Add this method to your login component or create an auth service
+  logout() {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userInfo');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('isLoggedIn');
+    this.router.navigate(['/pages/login']);
   }
 
   private async showToast(message: string, color: 'success' | 'danger' = 'danger') {

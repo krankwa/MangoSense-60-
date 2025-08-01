@@ -2,13 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { DatePipe } from '@angular/common'; // <-- Import DatePipe
+import { CommonModule, DatePipe } from '@angular/common'; // <-- Import DatePipe
 import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-history',
   standalone: true, 
-  imports: [IonicModule, DatePipe], // <-- Add DatePipe here
+  imports: [IonicModule, CommonModule, DatePipe], // <-- Add DatePipe here
   templateUrl: './history.page.html',
   styleUrls: ['./history.page.scss'],
 })

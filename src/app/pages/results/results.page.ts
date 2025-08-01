@@ -3,8 +3,6 @@ import { IonicModule, LoadingController, ToastController, ModalController } from
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { finalize } from 'rxjs/operators';
-import { environment } from '../../../environments/environment'; // Adjust the path as necessary
 import { VerifyModalComponent } from './verify-modal.component';
 
 @Component({
@@ -23,7 +21,7 @@ export class ResultsPage implements OnInit {
   treatment: string = '';
   confidenceLevel: string = '';
   isLoading = false;
-  isVerified = true; // Always show results immediately
+  isVerified = false; // Changed from true to false - modal will show first
   verificationResult: boolean | null = null;
 
   indicationsMap: { [key: string]: string[] } = {
@@ -72,7 +70,7 @@ export class ResultsPage implements OnInit {
       'Are the fruits soft and spoiling quickly?',
       'Are there black, rotten spots on the fruit?'
     ],
-    'Stem End Rot': [
+    'Stem end Rot': [
       'Is the area where the fruit joins the stem soft or rotten?',
       'Do you see water-soaked or dark spots at the stem end of the fruit?',
       'Are the fruits spoiling from the stem side?'
@@ -88,39 +86,34 @@ export class ResultsPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Always get the result and image from navigation state or window.history.state
     const navState = window.history.state;
     this.result = navState?.result || null;
     this.image = navState?.image || null;
+    
     if (!this.result || !this.result.success || !this.image) {
       this.showToast('No result or image found. Please analyze a photo first.');
-      this.isVerified = false;
+      this.router.navigate(['pages/home']);
       return;
     }
+    
     this.processResults();
   }
-
-  // Removed callPredictAPI, not needed when using navigation state result
 
   processResults() {
     console.log('Processing results:', this.result);
     
-    // Check if the API call was successful
     if (!this.result.success) {
       this.showToast('Prediction failed: ' + (this.result.error || 'Unknown error'));
       return;
     }
 
-    // Extract data from the Django backend response - check if data is nested
     const predictionData = this.result.data || this.result;
     
-    // Extract data from the correct Django backend response format
     if (predictionData.primary_prediction) {
-      // Main disease from primary prediction
+      // Extract all the data
       this.mainDisease = predictionData.primary_prediction.disease;
       this.treatment = predictionData.primary_prediction.treatment;
       
-      // Get top 3 predictions for probabilities display
       this.probabilities = predictionData.top_3_predictions.map((pred: any) => ({
         class: pred.disease,
         confidence: pred.confidence,
@@ -129,42 +122,61 @@ export class ResultsPage implements OnInit {
         rank: pred.rank
       }));
       
-      // Confidence level from prediction summary
       this.confidenceLevel = predictionData.prediction_summary.confidence_level;
-      
-      // Get disease info
       this.diseaseInfo = this.getDiseaseInfo(this.mainDisease);
       
-      console.log('Successfully processed results:');
-      console.log('Main disease:', this.mainDisease);
-      console.log('Confidence level:', this.confidenceLevel);
-      console.log('Top 3 predictions:', this.probabilities);
+      console.log('Successfully processed results');
       
-      // Show verify modal automatically if not verified
-      if (!this.isVerified) {
-        this.openVerificationModal();
-      }
+      // Show verification modal after processing results
+      this.openVerificationModal();
+      
     } else {
-      // Fallback for unexpected response format
       console.error('Unexpected response format:', this.result);
-      console.log('Available data structure:', predictionData);
-      console.log('Data keys:', Object.keys(predictionData));
-      
-      // Try to find prediction data in different possible structures
-      if (predictionData.predictions) {
-        console.log('Found predictions array:', predictionData.predictions);
-      }
-      if (predictionData.prediction) {
-        console.log('Found prediction object:', predictionData.prediction);
-      }
-      if (predictionData.result) {
-        console.log('Found result object:', predictionData.result);
-      }
-      
       this.mainDisease = 'Unknown Disease';
       this.diseaseInfo = 'Unable to determine disease from the image';
       this.probabilities = [];
-      this.showToast('Unexpected response format from server. Check console for details.');
+      this.showToast('Unexpected response format from server.');
+      
+      // Even for errors, set as verified to show something
+      this.isVerified = true;
+    }
+  }
+
+  async openVerificationModal() {
+    const indications = this.indicationsMap[this.mainDisease] || [];
+    
+    try {
+      const modal = await this.modalCtrl.create({
+        component: VerifyModalComponent,
+        componentProps: { 
+          mainDisease: this.mainDisease, 
+          indications: indications 
+        },
+        cssClass: 'verify-modal-custom',
+        backdropDismiss: false // Prevent dismissing by clicking backdrop
+      });
+      
+      await modal.present();
+
+      const { data } = await modal.onWillDismiss();
+      
+      // Always set as verified after modal dismissal
+      this.isVerified = true;
+      
+      if (data?.verified) {
+        this.verificationResult = data.isCorrect;
+        if (data.isCorrect) {
+          this.showToast('Thank you for verifying the result!', 'success');
+        } else {
+          this.showToast('Thank you for your feedback! This helps improve our AI.', 'warning');
+        }
+      } else if (data?.cancelled) {
+        this.showToast('Verification skipped', 'warning');
+      }
+      
+    } catch (error) {
+      console.error('Error opening modal:', error);
+      this.isVerified = true; // Show results even if modal fails
     }
   }
 
@@ -202,7 +214,7 @@ export class ResultsPage implements OnInit {
       'Powdery Mildew': 'A fungal disease that causes white, powdery coating on leaves and shoots. It can reduce photosynthesis and fruit quality.',
       'Sooty Mold': 'Black fungal growth that develops on honeydew secreted by insects. While not directly harmful, it reduces photosynthesis.',
       'Black Mold Rot': 'A fungal infection that causes black mold growth on fruits, leading to rapid deterioration and spoilage.',
-      'Stem End Rot': 'A post-harvest disease that affects fruits at the stem end, causing rot and reducing storage life.'
+      'Stem end Rot': 'A post-harvest disease that affects fruits at the stem end, causing rot and reducing storage life.'
     };
 
     return diseaseInfoMap[disease] || `Information about ${disease} is being researched. Please consult with agricultural experts for specific guidance.`;
@@ -221,27 +233,6 @@ export class ResultsPage implements OnInit {
     this.router.navigate(['pages/home']);
   }
   
-  async openVerificationModal() {
-    const indications = this.indicationsMap[this.mainDisease] || [];
-    const modal = await this.modalCtrl.create({
-      component: VerifyModalComponent,
-      componentProps: { mainDisease: this.mainDisease, indications: indications },
-      cssClass: 'verify-modal-custom'
-    });
-    await modal.present();
-
-    const { data } = await modal.onWillDismiss();
-    if (data?.verified) {
-      this.isVerified = true;
-      this.verificationResult = data.isCorrect;
-      if (data.isCorrect) {
-        this.showToast('Thank you for verifying!', 'success');
-      } else {
-        this.showToast('Thank you for your feedback!', 'warning');
-      }
-    }
-  }
-
   private async showToast(message: string, color: 'success' | 'warning' | 'danger' = 'danger') {
     const toast = await this.toastCtrl.create({ 
       message, 

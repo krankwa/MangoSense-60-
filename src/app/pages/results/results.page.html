@@ -18,6 +18,16 @@
       <ion-icon name="arrow-back-outline"></ion-icon>
     </ion-button>
 
+    <!-- Loading state while verification modal is shown -->
+    <div *ngIf="!isVerified" class="verification-pending">
+      <div class="pending-content">
+        <ion-spinner name="crescent"></ion-spinner>
+        <h3>Please verify the detection result</h3>
+        <p>A verification modal should appear shortly...</p>
+      </div>
+    </div>
+
+    <!-- Results section - only show after verification -->
     <div class="results-section" *ngIf="isVerified">
       <h2 class="page-title">Analysis Results</h2>
       
